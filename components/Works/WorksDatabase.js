@@ -92,7 +92,7 @@ export default class PostsDatabase extends React.Component {
             <>
                 <DataGrid
                     autoHeight
-                    pageSize={5}
+                    pageSize={10}
                     rows={this.props.works} 
                     columns={Columns} 
                     sx={{

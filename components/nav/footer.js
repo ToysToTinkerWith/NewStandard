@@ -80,7 +80,7 @@ export default class Nav extends React.Component {
 
           <br />
           <br />
-          <Typography color="primary" variant="subtitle1"> COPTYRIGHT @ DATAGNOME. ALL RIGHTS RESERVED </Typography>
+          <Typography color="primary" variant="subtitle1"> COPTYRIGHT @ ALTUM EXTRACTS. ALL RIGHTS RESERVED </Typography>
           <br />
       </div>
     )
