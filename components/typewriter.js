@@ -8,6 +8,7 @@ const Typewriter = ({ text, delay }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
+    console.log(text)
     if (text.length == 0) {
         setCurrentText("");
         setCurrentIndex(0);

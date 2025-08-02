@@ -154,9 +154,11 @@ export default class ID extends React.Component {
                         <Grid item key={index} md={6} >
                         <Button style={{display: "flex", border: "1px solid #49BC88", width: "100%", height: "100%", borderRadius: 15}}  href={window.location.pathname + "/" + work.item.replace(/ /g, "_")}>
                         <Grid container spacing={3} style={{height: "100%"}} >
-                          <Grid item sm={12}>
+                          <Grid item sm={12} style={{margin: "5%"}}>
                           <Typography align="left" variant="h4" style={{margin: "5%"}}> {work.item} </Typography>
+                          <Typography align="left" variant="caption" style={{margin: "5%"}}> {work.description} </Typography>
                           </Grid>
+                          
                           {this.props.imgs.length > 0 ? this.props.imgs.map((img, index) => {
                               if (img.collection == work.collection && img.item == work.item) {
                                 return (

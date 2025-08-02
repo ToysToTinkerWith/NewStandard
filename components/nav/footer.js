@@ -44,14 +44,14 @@ export default class Nav extends React.Component {
 
       <div style={{backgroundColor: "#011000"}} align="center">
           <Grid container>
-              <Grid item xs={12} sm={12} md={6}>
+              <Grid item xs={12} sm={12} md={4}>
                 <Button style={{display: "flex", margin: "auto", marginTop: 10}} href="/">
                   <img src={"/logo.png"} style={{width: this.state.width > 600 ? 100 : 60}} />
                 </Button>
               </Grid>
               
               
-              <Grid item xs={12} sm={4} md={2} syle={{padding: "5%"}}>
+              <Grid item xs={12} sm={4} md={2} >
                 <br />
                 <Button style={{borderRadius: 0, borderBottom: this.state.path == "/" ? "1px solid #49BC88" : null}} onClick={() => window.location.href = "/"}>
                   <Typography variant="h6"> Home </Typography>
@@ -81,6 +81,26 @@ export default class Nav extends React.Component {
           <br />
           <br />
           <Typography color="primary" variant="subtitle1"> COPTYRIGHT @ ALTUM EXTRACTS. ALL RIGHTS RESERVED </Typography>
+          <br />
+           <Button 
+              style={{
+  
+              display: "flex",
+              margin: "auto",
+              borderBottom: "1px solid #49BC88",
+              borderRadius: 0,
+              
+              
+              }}
+  
+              onClick={() => window.open("https://bergquistapplications.com")}
+              
+              > 
+              <Typography variant="h6" style={{}} >
+              Website created by Bergquist Applications LLC
+              </Typography>
+          </Button>
+
           <br />
       </div>
     )

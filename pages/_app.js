@@ -50,12 +50,14 @@ export default function MyApp(props) {
     let unsub
     let unsub2
 
-
     unsub = onSnapshot(works, (workSnap) => {
 
       setWorks([])
+      
           
       workSnap.forEach(async (work) => {
+
+        setImgs([])
 
           let workData = work.data()
 
@@ -72,18 +74,22 @@ export default function MyApp(props) {
             
 
             let imgs = []
+            
               
           imgsSnap.forEach(async (img) => {
             imgs.push({url: img.data().url, message: img.data().message, collection: workData.collection, item: workData.item})    
           });
 
-          console.log(workData.item)
-          console.log(imgs[0].message)
+          console.log(imgs)
 
           setImgs(oldimgs => [...oldimgs, ...imgs])
-  
+
+          
+          
   
           });
+
+          
 
           setWorks(works => [...works, workData])
 
@@ -92,13 +98,14 @@ export default function MyApp(props) {
           console.log(works)
 
 
-
-          
+        
       });
-
-
+     
+      
       });
       
+
+     
 
   }, [])
 
@@ -123,7 +130,7 @@ export default function MyApp(props) {
     }
   }, []);
 
-  console.log(cookies)
+  console.log(imgs)
 
     return (
     
@@ -175,6 +182,8 @@ export default function MyApp(props) {
                     <img src={"logo.png"} style={{display: "flex", margin: "auto", marginTop: 40}} />
                 <br />
                     <Button style={{display: "flex", margin: "auto", border: "1px solid #49BC88", padding: "5%"}} onClick={() => setCookie("user", {confirm: true})}><Typography align="center" variant="h6" style={{color: "#49BC88"}}> I confirm that I am 21 or a valid medical patient</Typography></Button>
+                  <br />
+                  <Typography align="center" variant="subtitle1" style={{color: "#49BC88", margin: 40}} >The statements made regarding these products have not been evaluated by the Food and Drug Administration. The efficacy of these products has not been confirmed by FDA-approved research. These products are not intended to diagnose, treat, cure or prevent any disease. These products should not be used if you are pregnant or nursing. No statements on this website are offering medical advice. Please consult a healthcare professional before use of any product on this website</Typography>
                 </div>
               :
               null

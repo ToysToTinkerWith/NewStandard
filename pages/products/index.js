@@ -7,9 +7,7 @@ import WorksDatabase from "../../components/Works/WorksDatabase"
 import NewWorks from "../../components/Works/NewWorks"
 import EditWorks from "../../components/Works/EditWorks"
 
-import { AuthContext } from "../../Firebase/FirebaseAuth"
-
-
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 import { db } from "../../Firebase/FirebaseInit"
 import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
@@ -63,9 +61,9 @@ export default class Work extends React.Component {
 
       })
 
-      console.log(sortedWorks)
-
-
+      const auth = getAuth();
+    const user = auth.currentUser;
+    console.log(user)
 
         return (
             <div >
@@ -79,8 +77,8 @@ export default class Work extends React.Component {
 
                 <div style={{backgroundColor: "#011000", overflow: "hidden"}}>
 
-                {this.context.currentUser ? 
-                this.context.currentUser.email == "abergquist96@gmail.com" ?
+                {user ? 
+                user.email == "abergquist96@gmail.com" ?
                 <Button style={{float: "right", border: "1px solid #49BC88", margin: 10, padding: 0}} onClick={() => this.setState({newWorks: true})}>
                   <Typography variant="h6" style={{color: "#49BC88"}}> + </Typography>
                 </Button>
@@ -102,7 +100,7 @@ export default class Work extends React.Component {
                       <Grid item key={index} xs={12} sm={12} md={6} style={{padding: 10, height: 400}}>
                         <Button style={{border: "1px solid #49BC88", width: "100%", display: "grid", height: "100%", borderRadius: 15}} href={"/products/" + work.works[0].collection.replace(/ /g, "_")}>
                           <br />
-                          <Typography align="center" variant="h4" style={{ color: "#49BC88", margin: "5%"}}> {work.works[0].collection} </Typography>
+                          <Typography align="center" variant="h4" style={{ color: "#49BC88"}}> {work.works[0].collection} </Typography>
                           <Typography align="center" variant="h5" style={{ color: "#49BC88", margin: "5%"}}> {work.num} items</Typography>
                           <br />
                           
@@ -141,6 +139,15 @@ export default class Work extends React.Component {
                   :
                   null
                   }
+
+                      <Grid item xs={12} sm={12} md={6} style={{padding: 10, height: 400}}>
+                        <Button style={{border: "1px solid #49BC88", width: "100%", display: "grid", height: "100%", borderRadius: 15}} onClick={() => window.open("https://houseofcultivar.com/")}>
+                        <Typography align="center" variant="h4" style={{ color: "#49BC88", margin: "5%"}}> Prerolls </Typography>
+
+                          <img src={"joints.png"} style={{maxWidth: 300, height: 200, width: "auto", margin: "auto", borderRadius: 15}}/>
+                          <br />
+                        </Button>
+                      </Grid>
 
                   <Button style={{display: "flex", margin: "auto", border: "1px solid #49BC88", borderRadius: 5, width: 200, marginTop: 20}} onClick={() => window.open("https://www.iheartjane.com/brands/24293/new-standard")}>
                       <Typography align="center" variant="h6" color="primary"> Order Online </Typography>

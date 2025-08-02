@@ -45,6 +45,8 @@ export default function ChatBot(props) {
   
           let session = await response.json()
 
+          console.log(session)
+
          
           setResponse(session.response)
 

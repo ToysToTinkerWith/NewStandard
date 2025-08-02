@@ -38,6 +38,23 @@ async function customModel(req, res) {
             Formulated with Live Resin, MCT Oil, and Avocado Oil, this product combines the luxury of a high-end tincture with the affordability and potency of a budget-friendly topical option. 
             Elevate your cannabis experience with the innovative Serum.
 
+            Cartridge Write-up:
+            The Cartridge is engineered for a superior vaping experience, featuring universal 510-threaded CCELL hardware designed to unlock the full potential of high terp live resin. 
+            With a focus on delivering maximum flavor and smoothness, this sleek and reliable cartridge ensures each puff is as rich and potent as the last. 
+            Made for connoisseurs who appreciate bold terpene profiles, The Cartridge offers effortless compatibility, performance, and premium taste in every draw.
+
+            Disposable Vape Write-up:
+            The Disposable Vape is engineered for those who demand a high-performance vaping experience. 
+            Featuring dual airflow for smooth, robust vapor production, this vape offers maximum flavor with every puff. 
+            The advanced clog-free design ensures seamless use, while the fast Type-C charging system keeps you powered up and ready to go. 
+            Whether you're seeking bold flavors or consistent performance, this disposable vape combines convenience and cutting-edge technology for a vaping journey like no other.
+
+            Prerolls Write-up:
+            Our Prerolls are crafted to elevate your smoking experience with precision and quality. 
+            Made with premium flower, these expertly rolled joints deliver smooth, even burns with every hit. 
+            Designed for convenience and consistency, each preroll offers rich flavor profiles and potent effects, perfect for enjoying on the go. 
+            Whether you're seeking relaxation, creativity, or a balanced high, these prerolls are the ideal companion for a seamless, high-quality smoking experience that enhances every moment.
+
             Different Products: 
             Sleep (CBN)
             This carefully crafted serum offers a harmonious combination of THC, CBD, and CBN specially designed to provide comfort for both the body and mind. Perfect for those seeking relief from occasional sleeplessness, it works its magic without leaving you feeling groggy the following day. Fall into the gentle embrace of our CBN serum as it helps you unwind and find the restful sleep you deserve.

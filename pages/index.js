@@ -35,10 +35,17 @@ export default class Index extends React.Component {
             let selImg
             let selProd
 
+            let serums = []
+
             this.props.works.forEach((work) => {
-              if (work.item == this.state.selProd) {
-                selProd = work
+              console.log(selProd)
+              if (work.collection == "Serum") {
+                serums.push(work)
+                if (work.item == this.state.selProd) {
+                  selProd = work
+                }
               }
+              
             })
 
             this.props.imgs.forEach((img) => {
@@ -46,6 +53,8 @@ export default class Index extends React.Component {
                 selImg = img
               }
             })
+
+            console.log(selProd)
 
             return (
                 <div>
@@ -57,6 +66,8 @@ export default class Index extends React.Component {
     
                     
                     </Head>
+
+                   
                    
                     <Typography variant="h2" align="center" color="primary" style={{margin: "5%"}} > New Standard </Typography>
                    
@@ -68,7 +79,7 @@ export default class Index extends React.Component {
                     <Typography variant="h6" align="center" color="primary" style={{margin: "5%"}} > Discover the essence of choice and quality with New Standard. Our diverse range of top-tier cannabis products, from unique live resin cartridges to adaptable serums, is crafted to cater to every preference.  </Typography>
                     <br />
                     <Grid container >
-                    {this.props.works.length > 0 ? this.props.works.slice(0,6).map((work) => {
+                    {serums.length > 0 ? serums.slice(0,6).map((work) => {
                     
 
                           let workImgs = []

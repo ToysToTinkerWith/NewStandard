@@ -24,11 +24,6 @@ export default class MyDocument extends Document {
 
           <meta name="theme-color" content={theme.palette.primary.main} />
           
-         
-
-
-
-          
           
         </Head>
         <body style={{backgroundColor: "#011000"}}>

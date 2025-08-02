@@ -10,6 +10,7 @@ import Innovate from "../components/animations/home/innovate";
 import Leaf from "../components/Leaf"
 
 
+
 export default class About extends React.Component {
 
     constructor(props) {
@@ -68,16 +69,41 @@ export default class About extends React.Component {
                     By staying true to its core values and constantly pushing the boundaries of what's possible, New Standard continues to lead the way in the cannabis industry.
                     </Typography>
 
-                    <Typography variant="h2" align="center" color="primary" style={{margin: "5%"}} > Our Products </Typography>
+                    <Typography variant="h2" align="center" color="primary" style={{margin: "5%", marginTop: 40, marginBottom: 40}} > Our Products </Typography>
 
-                    <Typography variant="h4" align="center" color="primary" style={{margin: "5%"}} > The Serum: Elevate Your Experience </Typography>
-                    <img src="about/serum.svg" style={{display: "flex", margin: "auto", width: "90%", maxWidth: 300}}/>
+                    <Typography variant="h4" align="center" color="primary" style={{margin: "5%", marginTop: 40, marginBottom: 40}} > The Serum: Elevate Your Experience </Typography>
+                    <img src="about/serum.svg" style={{display: "flex", margin: "auto", height: "50vw", maxWidth: 400}}/>
 
-                    <Typography variant="h6" align="center" color="primary" style={{margin: "5%"}} > 
+                    <Typography variant="h6" align="center" color="primary" style={{margin: "5%", marginTop: 40, marginBottom: 40}} > 
                     The Serum offers a refined cannabis experience tailored for the discerning connoisseur seeking quality without the excess. 
                     Crafted with food-grade, fully edible ingredients, this product stands out with its use of full spectrum extract, entourage effect, and terpene enrichment for unparalleled potency. 
                     Distinguished by its convenient dropper bottle packaging, the New Standard serum ensures precise dosage flexibility for any tolerance level. 
                     Formulated with Live Resin, MCT Oil, and Avocado Oil, this product combines the luxury of a high-end tincture with the affordability and potency of a budget-friendly topical option.
+                    </Typography>
+
+                    <Typography variant="h4" align="center" color="primary" style={{margin: "5%", marginTop: 40, marginBottom: 0}} > The Cartridge: Enhance The Journey </Typography>
+                    <img src="about/cart.gif" style={{display: "flex", margin: "auto", width: 300}}/>
+
+                    <Typography variant="h6" align="center" color="primary" style={{margin: "5%", marginTop: 0, marginBottom: 40}} > 
+                    The Cartridge is engineered for a superior vaping experience, featuring universal 510-threaded CCELL hardware designed to unlock the full potential of high terp live resin. 
+                    With a focus on delivering maximum flavor and smoothness, this sleek and reliable cartridge ensures each puff is as rich and potent as the last. 
+                    Made for connoisseurs who appreciate bold terpene profiles, The Cartridge offers effortless compatibility, performance, and premium taste in every draw.
+                    </Typography>
+
+                    <Typography variant="h4" align="center" color="primary" style={{margin: "5%", marginTop: 40, marginBottom: 40}} > Disposable Vape </Typography>
+
+                    <Typography variant="h6" align="center" color="primary" style={{margin: "5%", marginTop: 40, marginBottom: 40}} > 
+                    The Disposable Vape is engineered for those who demand a high-performance vaping experience. Featuring dual airflow for smooth, robust vapor production, this vape offers maximum flavor with every puff. 
+                    The advanced clog-free design ensures seamless use, while the fast Type-C charging system keeps you powered up and ready to go. 
+                    Whether you're seeking bold flavors or consistent performance, this disposable vape combines convenience and cutting-edge technology for a vaping journey like no other.
+                    </Typography>
+
+                    <Typography variant="h4" align="center" color="primary" style={{margin: "5%", marginTop: 40, marginBottom: 40}} > Prerolls </Typography>
+
+                    <Typography variant="h6" align="center" color="primary" style={{margin: "5%", marginTop: 40, marginBottom: 40}} > 
+                    Our Prerolls are crafted to elevate your smoking experience with precision and quality. Made with premium flower, these expertly rolled joints deliver smooth, even burns with every hit. 
+                    Designed for convenience and consistency, each preroll offers rich flavor profiles and potent effects, perfect for enjoying on the go. 
+                    Whether you're seeking relaxation, creativity, or a balanced high, these prerolls are the ideal companion for a seamless, high-quality smoking experience that enhances every moment.
                     </Typography>
                    
                     

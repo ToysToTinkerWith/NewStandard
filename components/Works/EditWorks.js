@@ -74,11 +74,6 @@ export default class EditWorks extends React.Component {
         
     }
 
-    componentWillUnmount() {
-        this.unsub()
-        this.unsub2()
-    }
-
     
 
 
@@ -115,7 +110,7 @@ export default class EditWorks extends React.Component {
 
             const uploadPictures = this.state.newPictures
 
-            this.setState({newPictures: []})
+            if (uploadPictures.length > 0) {
 
                 for (let y = 0; y < uploadPictures.length; y++) {
 
@@ -146,11 +141,17 @@ export default class EditWorks extends React.Component {
                         message: imgMessage, 
                         created: uploadPictures[y].lastModified
                     })
+
+                    this.props.closeModal()
                 });
         
                 })
         
             }
+        }
+        else {
+            this.props.closeModal()
+        }
         
             })
 
