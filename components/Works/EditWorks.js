@@ -1,522 +1,860 @@
 import React from "react"
 
-import { db } from "../../Firebase/FirebaseInit"
-import { doc, collection, addDoc, updateDoc, serverTimestamp, onSnapshot, arrayUnion, deleteDoc, getDocs } from "firebase/firestore";
+import { db, storage } from "../../Firebase/FirebaseInit"
+import {
+  doc,
+  collection,
+  addDoc,
+  updateDoc,
+  serverTimestamp,
+  onSnapshot,
+  deleteDoc,
+  getDocs,
+} from "firebase/firestore"
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage"
 
-import { storage } from "../../Firebase/FirebaseInit"
-import { ref, uploadBytes, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-
-import { Modal, Button, TextField, Typography, Checkbox, Card, Grid} from "@mui/material"
-
+import {
+  Modal,
+  Button,
+  TextField,
+  Typography,
+  Card,
+  Grid,
+  LinearProgress,
+} from "@mui/material"
 
 export default class EditWorks extends React.Component {
-
-    
-
-    constructor(props) {
-        super(props)
-        this.state = {
-            item: "",
-            collection: "",
-            date: "",
-            oldPictures: [],
-            newPictures: [],
-            progress: 0,
-            pictureWarning: false,
-            requestWarning: false,
-            deleteWarning: false,
-
-            confirm: false,
-            viewPicture: false,
-
-        }
-        this.handleChange = this.handleChange.bind(this)
-        this.handlePicture = this.handlePicture.bind(this)
-        this.deletePicture = this.deletePicture.bind(this)
-        this.deletePictureFirebase = this.deletePictureFirebase.bind(this)
-        this.deleteItem = this.deleteItem.bind(this)
-
-
-        this.updateWork = this.updateWork.bind(this)
-
-
-
-   
+  constructor(props) {
+    super(props)
+    this.state = {
+      item: "",
+      collection: "",
+      description: "",
+      oldPictures: [],
+      newPictures: [],
+      progress: 0,
+      pictureWarning: false,
+      deleteWarning: false,
+      viewPicture: null,
+      loading: false,
+      uploadComplete: false,
     }
 
-    componentDidMount() {
+    this.handleChange = this.handleChange.bind(this)
+    this.handlePicture = this.handlePicture.bind(this)
+    this.deletePicture = this.deletePicture.bind(this)
+    this.deletePictureFirebase = this.deletePictureFirebase.bind(this)
+    this.deleteItem = this.deleteItem.bind(this)
+    this.updateWork = this.updateWork.bind(this)
+  }
 
-        this.setState({newPictures: []})
+  componentDidMount() {
+    this.setState({ newPictures: [] })
 
-        const worksRef = doc(db, "works", this.props.work)
+    const worksRef = doc(db, "works", this.props.work)
 
-        this.unsub = onSnapshot(worksRef, (doc) => {
-            this.setState({
-                item: doc.data().item,
-                collection: doc.data().collection,
-                description: doc.data().description,
-                color1: doc.data().color1,
-                color2: doc.data().color2,
-                color3: doc.data().color3,
-                date: doc.data().date
-                
-            })
-            const imgsRef = collection(db, "works", this.props.work, "imgs")
-            this.unsub2 = onSnapshot(imgsRef, (query) => {
-                this.setState({oldPictures: []})
-                query.forEach((doc) => {
-                    this.setState(prevState => ({
-                        oldPictures: [...prevState.oldPictures, [doc.data(), doc.id]]
-                    }))
-                })
-            })
-        });
-        
+    this.unsub = onSnapshot(worksRef, (docSnap) => {
+      const data = docSnap.data() || {}
+
+      this.setState({
+        item: data.item || "",
+        collection: data.collection || "",
+        description: data.description || "",
+      })
+
+      const imgsRef = collection(db, "works", this.props.work, "imgs")
+
+      this.unsub2 = onSnapshot(imgsRef, (querySnap) => {
+        const oldPictures = []
+
+        querySnap.forEach((imgDoc) => {
+          oldPictures.push([
+            {
+              ...imgDoc.data(),
+              collection:
+                imgDoc.data()?.collection || data.collection || "",
+              item: imgDoc.data()?.item || data.item || "",
+              workId: imgDoc.data()?.workId || this.props.work,
+            },
+            imgDoc.id,
+          ])
+        })
+
+        this.setState({ oldPictures })
+      })
+    })
+  }
+
+  componentWillUnmount() {
+    if (this.unsub) this.unsub()
+    if (this.unsub2) this.unsub2()
+
+    this.state.newPictures.forEach((picture) => {
+      if (picture.previewUrl) {
+        URL.revokeObjectURL(picture.previewUrl)
+      }
+    })
+  }
+
+  getFieldSx() {
+    return {
+      width: "100%",
+      "& .MuiInputLabel-root": {
+        color: "#49BC88",
+      },
+      "& .MuiInputLabel-root.Mui-focused": {
+        color: "#49BC88",
+      },
+      "& .MuiOutlinedInput-root": {
+        color: "#49BC88",
+        backgroundColor: "rgba(1, 16, 0, 0.72)",
+        "& input": {
+          color: "#49BC88",
+          WebkitTextFillColor: "#49BC88",
+        },
+        "& textarea": {
+          color: "#49BC88",
+          WebkitTextFillColor: "#49BC88",
+        },
+        "& fieldset": {
+          borderColor: "#49BC88",
+        },
+        "&:hover fieldset": {
+          borderColor: "#49BC88",
+        },
+        "&.Mui-focused fieldset": {
+          borderColor: "#49BC88",
+        },
+      },
+      "& .MuiFormHelperText-root": {
+        color: "#49BC88",
+      },
+    }
+  }
+
+  getPanelStyle() {
+    return {
+      width: "100%",
+      maxWidth: 1100,
+      margin: "0 auto",
+      background:
+        "radial-gradient(circle at top left, rgba(73,188,136,0.10), transparent 35%), #011000",
+      border: "1px solid #49BC88",
+      borderRadius: 18,
+      padding: "28px 22px",
+      boxShadow: "0 0 24px rgba(73,188,136,0.16)",
+    }
+  }
+
+  getButtonStyle() {
+    return {
+      backgroundColor: "#011000",
+      color: "#49BC88",
+      border: "1px solid #49BC88",
+      borderRadius: 10,
+      padding: "10px 18px",
+      boxShadow: "0 0 14px rgba(73,188,136,0.15)",
+    }
+  }
+
+  getDangerButtonStyle() {
+    return {
+      backgroundColor: "#011000",
+      color: "#49BC88",
+      border: "1px solid #49BC88",
+      borderRadius: 10,
+      padding: "10px 18px",
+    }
+  }
+
+  handleChange(event) {
+    const target = event.target
+    const value = target.type === "checkbox" ? target.checked : target.value
+    const name = target.name
+
+    this.setState({
+      [name]: value,
+    })
+  }
+
+  handlePicture(e) {
+    const files = Array.from(e.target.files || [])
+    if (!files.length) return
+
+    const preparedFiles = files.map((file) => {
+      const id = `${file.name}-${file.lastModified}-${Math.random()
+        .toString(36)
+        .slice(2)}`
+
+      return {
+        id,
+        file,
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        lastModified: file.lastModified,
+        previewUrl: URL.createObjectURL(file),
+      }
+    })
+
+    this.setState((prevState) => {
+      const nextState = {
+        newPictures: [...prevState.newPictures, ...preparedFiles],
+      }
+
+      preparedFiles.forEach((picture) => {
+        nextState[picture.id] = ""
+      })
+
+      return nextState
+    })
+
+    e.target.value = null
+  }
+
+  deletePicture(pictureId) {
+    const pictureToDelete = this.state.newPictures.find((img) => img.id === pictureId)
+
+    if (pictureToDelete?.previewUrl) {
+      URL.revokeObjectURL(pictureToDelete.previewUrl)
     }
 
-    
+    this.setState((prevState) => ({
+      newPictures: prevState.newPictures.filter((img) => img.id !== pictureId),
+      [pictureId]: "",
+      viewPicture:
+        prevState.viewPicture === pictureToDelete?.previewUrl
+          ? null
+          : prevState.viewPicture,
+    }))
+  }
 
+  async deletePictureFirebase(pictureId) {
+    const imgRef = doc(db, "works", this.props.work, "imgs", pictureId)
+    await deleteDoc(imgRef)
+    this.setState({ pictureWarning: false })
+  }
 
-    async updateWork() {
+  async deleteItem() {
+    for (const picture of this.state.oldPictures) {
+      await this.deletePictureFirebase(picture[1])
+    }
 
-        const imgsRef = collection(db, "works", this.props.work, "imgs")
+    const workRef = doc(db, "works", this.props.work)
+    await deleteDoc(workRef)
 
-        const imgQuery = await getDocs(imgsRef)
-      
-        imgQuery.forEach(async (img) => {
-            let imgMessage = this.state[img.id] || this.state[img.id] == "" ? this.state[img.id] : img.data().message
+    this.setState({ deleteWarning: false })
+    this.props.closeModal()
+  }
 
-            const imgRef = doc(db, "works", this.props.work, "imgs", img.id)
-                await updateDoc(imgRef, {
-                message: imgMessage, 
-                })
+  async updateWork() {
+    try {
+      this.setState({
+        loading: true,
+        progress: 0,
+        uploadComplete: false,
+      })
+
+      const collectionName = String(this.state.collection || "").trim()
+      const itemName = String(this.state.item || "").trim()
+
+      const imgsRef = collection(db, "works", this.props.work, "imgs")
+      const imgQuery = await getDocs(imgsRef)
+
+      for (const imgDoc of imgQuery.docs) {
+        const imgMessage =
+          this.state[imgDoc.id] || this.state[imgDoc.id] === ""
+            ? this.state[imgDoc.id]
+            : imgDoc.data().message
+
+        const imgRef = doc(db, "works", this.props.work, "imgs", imgDoc.id)
+
+        await updateDoc(imgRef, {
+          message: imgMessage,
+          collection: collectionName,
+          item: itemName,
+          workId: this.props.work,
         })
-       
-
-        const workRef = doc(db, "works", this.props.work)
-
-        await updateDoc(workRef, {
-            item: this.state.item,
-            collection: this.state.collection,
-            description: this.state.description,
-            color1: this.state.color1,
-            color2: this.state.color2,
-            color3: this.state.color3,
-            date: this.state.date,
-            
-            updated: serverTimestamp()
-            
-        }).then((doc) => {
-
-            const uploadPictures = this.state.newPictures
-
-            if (uploadPictures.length > 0) {
-
-                for (let y = 0; y < uploadPictures.length; y++) {
-
-                const imgRef = ref(storage, "worksImages/" + uploadPictures[y].id)
-        
-                uploadBytes(imgRef, uploadPictures[y])
-
-                const uploadTask = uploadBytesResumable(imgRef, uploadPictures[y])
-        
-                uploadTask.on("state_changed", (snapshot) => {
-                const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100)
-                this.setState({progress: progress})
-                },
-                (error) => {
-                alert(error.message)
-                },
-                () => {
-
-                getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-
-                    const imgCol = collection(db, "works", this.props.work, "imgs")
-                    
-                    let imgMessage = this.state[uploadPictures[y].id] ? this.state[uploadPictures[y].id] : ""
-                    console.log(imgMessage)
-                
-                    addDoc(imgCol, {
-                        url: downloadURL, 
-                        message: imgMessage, 
-                        created: uploadPictures[y].lastModified
-                    })
-
-                    this.props.closeModal()
-                });
-        
-                })
-        
-            }
-        }
-        else {
-            this.props.closeModal()
-        }
-        
-            })
-
       }
 
-      deletePicture(pictureId) {
+      const workRef = doc(db, "works", this.props.work)
 
-        const imgs = this.state.newPictures
-        let index = 0
-        let delIndex
+      await updateDoc(workRef, {
+        item: itemName,
+        collection: collectionName,
+        description: this.state.description,
+        updated: serverTimestamp(),
+      })
 
-        imgs.forEach(img => {
-            if (img.id == pictureId) {
-                delIndex = index
-            }
-            index++
-        })
-    
-        imgs.splice(delIndex, 1)
-    
+      const uploadPictures = this.state.newPictures || []
+
+      if (uploadPictures.length === 0) {
         this.setState({
-          pictures: imgs,
-          [pictureId]: ""
+          loading: false,
+          progress: 100,
+          uploadComplete: true,
         })
-
-    
+        this.props.closeModal()
+        return
       }
 
-      async deletePictureFirebase(picture) {
+      let completedUploads = 0
 
-        const imgRef = doc(db, "works", this.props.work, "imgs", picture)
+      await Promise.all(
+        uploadPictures.map((picture, index) => {
+          return new Promise((resolve, reject) => {
+            const sourceFile = picture.file
+            const fileExt = picture.name?.includes(".")
+              ? picture.name.substring(picture.name.lastIndexOf("."))
+              : ""
+            const safeFileName = `${picture.id}${fileExt}`
 
-        await deleteDoc(imgRef)
+            const imgRef = ref(storage, `worksImages/${this.props.work}/${safeFileName}`)
+            const uploadTask = uploadBytesResumable(imgRef, sourceFile)
 
-        this.setState({pictureWarning: false})
+            uploadTask.on(
+              "state_changed",
+              (snapshot) => {
+                const fileProgress =
+                  snapshot.totalBytes > 0
+                    ? snapshot.bytesTransferred / snapshot.totalBytes
+                    : 0
 
-    
-      }
+                const overallProgress = Math.round(
+                  ((completedUploads + fileProgress) / uploadPictures.length) * 100
+                )
 
-      async deleteItem() {
+                this.setState({ progress: overallProgress })
+              },
+              (error) => {
+                reject(error)
+              },
+              async () => {
+                try {
+                  const downloadURL = await getDownloadURL(uploadTask.snapshot.ref)
+                  const imgCol = collection(db, "works", this.props.work, "imgs")
+                  const imgMessage = this.state[picture.id] ? this.state[picture.id] : ""
 
-        this.state.oldPictures.forEach(async (picture) => {
-            await this.deletePictureFirebase(picture)
-        })
+                  await addDoc(imgCol, {
+                    index:
+                      this.state.oldPictures.length + index,
+                    url: downloadURL,
+                    message: imgMessage,
+                    created: picture.lastModified || Date.now(),
+                    fileName: picture.name || "",
+                    contentType: picture.type || "",
+                    collection: collectionName,
+                    item: itemName,
+                    workId: this.props.work,
+                  })
 
-        console.log(this.props.work)
+                  completedUploads += 1
+                  this.setState({
+                    progress: Math.round(
+                      (completedUploads / uploadPictures.length) * 100
+                    ),
+                  })
 
-        const imgRef = doc(db, "works", this.props.work)
-
-        await deleteDoc(imgRef)
-
-        this.setState({deleteWarning: false})
-
-    
-      }
-
-
-      handleChange(event) {
-          console.log(event)
-        const target = event.target;
-        const value = target.type === 'checkbox' ? target.checked : target.value;
-        const name = target.name;
-
-        this.setState({
-        [name]: value
-
-        });
-      }
-      
-      handlePicture = (e) => {
-        for (let i = 0; i < e.target.files.length; i++) {
-          const newPicture = e.target.files[i];
-          newPicture["id"] = Math.random().toString(20);
-          console.log(newPicture)
-          this.setState(prevState => ({newPictures: [...prevState.newPictures, newPicture], "newPicture.id": ""}));
-        }
-        e.target.value = null
-      };
-
-    render() {
-
-        return (
-            <div style={{backgroundColor: "#FFE2D9"}}>
-
-                    <TextField
-                    color="primary"
-                    variant="outlined"
-                    value={this.state.collection}
-                    type="text"
-                    label={"Collection Name"}
-                    name={"collection"}
-                    style={{width: "50%", display: "flex", margin: "auto"}}
-                    onChange={this.handleChange}
-                    />
-
-                    <br />
-                    <br />
-
-                    <TextField
-                    color="primary"
-                    variant="outlined"
-                    value={this.state.item}
-                    type="phone"
-                    label={"Item Name"}
-                    name={"item"}
-                    style={{width: "50%", display: "flex", margin: "auto"}}
-                    onChange={this.handleChange}
-                    />
-
-                    <br />
-                    <br />
-
-                    <TextField
-                    color="primary"
-                    variant="outlined"
-                    multiline
-                    rows={5}
-                    value={this.state.description}
-                    label={"Item Description"}
-                    name={"description"}
-                    style={{width: "50%", display: "flex", margin: "auto"}}
-                    onChange={this.handleChange}
-                    />
-
-                    <br />
-                    <br />
-
-                    <TextField
-                    color="primary"
-                    variant="outlined"
-                    value={this.state.color1}
-                    label={"Color 1"}
-                    name={"color1"}
-                    style={{width: "50%", display: "flex", margin: "auto"}}
-                    onChange={this.handleChange}
-                    />
-
-                    <br />
-                    <br />
-
-                    <TextField
-                    color="primary"
-                    variant="outlined"
-                    value={this.state.color2}
-                    label={"Color 2"}
-                    name={"color2"}
-                    style={{width: "50%", display: "flex", margin: "auto"}}
-                    onChange={this.handleChange}
-                    />
-
-                    <br />
-                    <br />
-
-                    <TextField
-                    color="primary"
-                    variant="outlined"
-                    value={this.state.color3}
-                    label={"Color 3"}
-                    name={"color3"}
-                    style={{width: "50%", display: "flex", margin: "auto"}}
-                    onChange={this.handleChange}
-                    />
-
-                    <br />
-                    <br />
-
-                    <TextField
-                    color="primary"
-                    variant="outlined"
-                    value={this.state.date}
-                    type="date"
-                    InputLabelProps={{ shrink: true }}
-                    label={"Date"}
-                    name={"date"}
-                    style={{width: "50%", display: "flex", margin: "auto"}}
-                    onChange={this.handleChange}
-                    />
-
-                    <br />
-                    <br />  
-
-                    
-                    
-                    
-                    <Button variant="contained" component="label" color="secondary" style={{backgroundColor: "#011000", width: 100, padding: 10, display: "flex", margin: "auto"}}>
-                    <Typography variant="subtitle2" style={{color: "#49BC88"}}>  Add Photos </Typography>
-
-                   
-                    <input type="file" multiple onChange={this.handlePicture} style={{width: 0, opacity: 0}}/>
-
-                    </Button>
-                    <br />
-                    <br />
-                    
-
-                    
-                    
-
-                    <div style={{textAlign: "center"}}>
-
-                    {this.state.oldPictures.length > 0 ? this.state.oldPictures.map((picture, index) => {
-                        return (
-                            <div key={index} style={{display: "inline-block", border: "1px solid black", borderRadius: 5, margin: 5, padding: 10}}>
-                                <Button onClick={() => this.setState({viewPicture: picture[0].url})}> 
-                            <img src={picture[0].url} alt="img" style={{height: 100, width: 100, borderRadius: 15}}/>
-                            </Button>
-                            <TextField
-                                onChange={this.handleChange}
-                                multiline
-                                rows={3}
-                                defaultValue={picture[0].message}
-                                variant="outlined"
-                                type="text"
-                                label="Description"
-                                name={picture[1]}
-                                style={{
-                                display: "flex",
-                                margin: "auto",
-                                width: "70%"
-                                }}
-                            />
-                            <Button variant="contained" color="primary" style={{margin: 10, padding: 10}} onClick={() => this.setState({pictureWarning: picture[1]})}>
-                                Del
-                            </Button>
-                            
-                            </div>
-                        )
-                        })  
-                        :
-                        null
-                        }
-
-                    {this.state.newPictures.length > 0 ? this.state.newPictures.map((picture, index) => {
-                        console.log(picture)
-                        return (
-                            <div key={index} style={{display: "inline-block", border: "1px solid black", borderRadius: 5, margin: 5, padding: 10}}>
-                                <Button onClick={() => this.setState({viewPicture: URL.createObjectURL(picture)})}> 
-                            <img src={URL.createObjectURL(picture)} alt="img" style={{height: 100, width: 100, borderRadius: 15}}/>
-                            </Button>
-                            <TextField
-                                onChange={this.handleChange}
-                                multiline
-                                rows={3}
-                                value={this.state.newPictures.id}
-                                variant="outlined"
-                                type="text"
-                                label="Description"
-                                name={picture.id}
-                                style={{
-                                display: "flex",
-                                margin: "auto",
-                                width: "70%"
-                                }}
-                            />
-                         
-                            <Button variant="contained" color="primary" style={{margin: 10, padding: 10, backgroundColor: "#011000"}} onClick={() => this.deletePicture(picture.id)}>
-                                Del
-                            </Button>   
-                            </div>
-                        )
-                        })  
-                        :
-                        null
-                        }
-
-                    
-                        
-                    </div>
-
-                    <br />
-                    {this.state.progress == 100 ? 
-                    <Typography align="center" variant="h6"> Uploaded </Typography>
-                    :
-                    this.state.progress == 0 ?
-                    null
-                    :
-                    <Typography align="center" variant="h6"> Uploading... {this.state.progress} </Typography>
-                    }
-                    <br/>
-                        
-                <Button
-                color="secondary"
-                variant="contained"
-                style={{width: 100, padding: 10, backgroundColor: "#011000", display: "flex", margin: "auto"}}
-                onClick={() => 
-                    this.updateWork()
-                    }
-                > 
-                <Typography variant="subtitle2" style={{color: "#49BC88"}}> Edit Item </Typography>
-
-                
-                </Button>
-
-                <br />
-                <br />
-
-                <Button variant="contained" color="primary" style={{margin: 10, padding: 10, backgroundColor: "#011000", float: "right"}} onClick={() => this.setState({deleteWarning: true})}>
-                                <Typography style={{color: "#49BC88"}}>Delete Item</Typography>
-                            </Button>   
-
-
-               
-            {this.state.pictureWarning ? 
-                <Modal 
-                open={true} 
-                onClose={() => this.setState({pictureWarning: false})}
-                style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                }}>
-                <div style={{backgroundColor: "#011000", borderRadius: 15, padding: 20}}>
-                    <Typography variant="body1" style={{padding: 20, color: "#49BC88"}} >  Delete this picture? </Typography>
-                    <Button variant="contained" color="secondary" style={{width: "50%"}} onClick={() => this.setState({pictureWarning: false})}> Back </Button>
-                    <Button variant="contained" color="secondary" style={{width: "50%"}} onClick={() => this.deletePictureFirebase(this.state.pictureWarning)}> Yes </Button>
-                </div>
-                
-                </Modal>
-            :
-            null
-            }
-
-            {this.state.deleteWarning ? 
-                <Modal 
-                open={true} 
-                onClose={() => this.setState({deleteWarning: false})}
-                style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                }}>
-                <div style={{backgroundColor: "#011000", borderRadius: 15, padding: 20}}>
-                    <Typography variant="body1" style={{padding: 20, color: "#49BC88"}} >  Delete this item? </Typography>
-                    <Button variant="contained" color="secondary" style={{width: "50%"}} onClick={() => this.setState({deleteWarning: false})}> Back </Button>
-                    <Button variant="contained" color="secondary" style={{width: "50%"}} onClick={() => this.deleteItem()}> Yes </Button>
-                </div>
-                
-                </Modal>
-            :
-            null
-            }
-            
-
-
-                {this.state.viewPicture ?
-                    <Modal 
-                    open={true} 
-                    onClose={() => this.setState({viewPicture: null})}
-                    onClick={() => this.setState({viewPicture: null})}
-                    style={{
-                        overflowY: "auto",
-                        overflowX: "hidden"
-                    }}>
-                    <img src={this.state.viewPicture} alt="" variant="square" style={{ width: "100%", height: "auto" }} />
-                    </Modal>
-                    
-                    :
-                    null
+                  resolve()
+                } catch (err) {
+                  reject(err)
                 }
+              }
+            )
+          })
+        })
+      )
 
-            
+      this.state.newPictures.forEach((picture) => {
+        if (picture.previewUrl) URL.revokeObjectURL(picture.previewUrl)
+      })
+
+      this.setState({
+        newPictures: [],
+        loading: false,
+        progress: 100,
+        uploadComplete: true,
+      })
+
+      this.props.closeModal()
+    } catch (error) {
+      console.error(error)
+      alert(error?.message || "There was an issue updating this item.")
+      this.setState({
+        loading: false,
+        uploadComplete: false,
+      })
+    }
+  }
+
+  render() {
+    const fieldSx = this.getFieldSx()
+    const buttonStyle = this.getButtonStyle()
+    const dangerButtonStyle = this.getDangerButtonStyle()
+
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          backgroundColor: "#011000",
+          padding: "36px 18px 60px 18px",
+        }}
+      >
+        <div style={this.getPanelStyle()}>
+          <Typography
+            variant="h4"
+            align="center"
+            style={{
+              color: "#49BC88",
+              marginBottom: 10,
+            }}
+          >
+            Edit Item
+          </Typography>
+
+          <Typography
+            variant="body1"
+            align="center"
+            style={{
+              color: "#49BC88",
+              opacity: 0.9,
+              marginBottom: 28,
+            }}
+          >
+            Update this item and manage its images.
+          </Typography>
+
+          <Grid container spacing={2.5}>
+            <Grid item xs={12} md={6}>
+              <TextField
+                variant="outlined"
+                value={this.state.collection}
+                type="text"
+                label="Collection Name"
+                name="collection"
+                onChange={this.handleChange}
+                sx={fieldSx}
+              />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <TextField
+                variant="outlined"
+                value={this.state.item}
+                type="text"
+                label="Item Name"
+                name="item"
+                onChange={this.handleChange}
+                sx={fieldSx}
+              />
+            </Grid>
+
+            <Grid item xs={12}>
+              <TextField
+                variant="outlined"
+                multiline
+                rows={5}
+                value={this.state.description}
+                label="Item Description"
+                name="description"
+                onChange={this.handleChange}
+                sx={fieldSx}
+              />
+            </Grid>
+
+            <Grid item xs={12}>
+              <Button
+                variant="contained"
+                component="label"
+                style={{
+                  ...buttonStyle,
+                  width: "100%",
+                  height: 56,
+                }}
+              >
+                <Typography variant="subtitle2" style={{ color: "#49BC88" }}>
+                  Add Photos
+                </Typography>
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={this.handlePicture}
+                  style={{ width: 0, opacity: 0 }}
+                />
+              </Button>
+            </Grid>
+          </Grid>
+
+          <div style={{ marginTop: 28 }}>
+            {this.state.oldPictures.length > 0 ? (
+              <>
+                <Typography
+                  variant="h6"
+                  style={{ color: "#49BC88", marginBottom: 16 }}
+                >
+                  Current Images
+                </Typography>
+
+                <Grid container spacing={2}>
+                  {this.state.oldPictures.map((picture, index) => (
+                    <Grid item xs={12} sm={6} md={4} lg={3} key={picture[1] || index}>
+                      <Card
+                        style={{
+                          backgroundColor: "#011000",
+                          border: "1px solid #49BC88",
+                          borderRadius: 16,
+                          padding: 12,
+                          boxShadow: "0 0 18px rgba(73,188,136,0.10)",
+                        }}
+                      >
+                        <Button
+                          onClick={() => this.setState({ viewPicture: picture[0].url })}
+                          style={{
+                            padding: 0,
+                            width: "100%",
+                            display: "block",
+                            borderRadius: 12,
+                            overflow: "hidden",
+                            marginBottom: 12,
+                          }}
+                        >
+                          <img
+                            src={picture[0].url}
+                            alt="img"
+                            style={{
+                              width: "100%",
+                              height: 220,
+                              objectFit: "cover",
+                              display: "block",
+                              borderRadius: 12,
+                              border: "1px solid #49BC88",
+                            }}
+                          />
+                        </Button>
+
+                        <TextField
+                          onChange={this.handleChange}
+                          multiline
+                          rows={3}
+                          defaultValue={picture[0].message || ""}
+                          variant="outlined"
+                          type="text"
+                          label="Description"
+                          name={picture[1]}
+                          sx={fieldSx}
+                        />
+
+                        <Button
+                          variant="contained"
+                          style={{
+                            ...dangerButtonStyle,
+                            width: "100%",
+                            marginTop: 8,
+                          }}
+                          onClick={() => this.setState({ pictureWarning: picture[1] })}
+                        >
+                          Del
+                        </Button>
+                      </Card>
+                    </Grid>
+                  ))}
+                </Grid>
+              </>
+            ) : null}
+
+            {this.state.newPictures.length > 0 ? (
+              <>
+                <Typography
+                  variant="h6"
+                  style={{ color: "#49BC88", marginTop: 28, marginBottom: 16 }}
+                >
+                  New Images
+                </Typography>
+
+                <Grid container spacing={2}>
+                  {this.state.newPictures.map((picture, index) => (
+                    <Grid item xs={12} sm={6} md={4} lg={3} key={picture.id || index}>
+                      <Card
+                        style={{
+                          backgroundColor: "#011000",
+                          border: "1px solid #49BC88",
+                          borderRadius: 16,
+                          padding: 12,
+                          boxShadow: "0 0 18px rgba(73,188,136,0.10)",
+                        }}
+                      >
+                        <Button
+                          onClick={() =>
+                            this.setState({ viewPicture: picture.previewUrl })
+                          }
+                          style={{
+                            padding: 0,
+                            width: "100%",
+                            display: "block",
+                            borderRadius: 12,
+                            overflow: "hidden",
+                            marginBottom: 12,
+                          }}
+                        >
+                          <img
+                            src={picture.previewUrl}
+                            alt={picture.name || "preview"}
+                            style={{
+                              width: "100%",
+                              height: 220,
+                              objectFit: "cover",
+                              display: "block",
+                              borderRadius: 12,
+                              border: "1px solid #49BC88",
+                            }}
+                          />
+                        </Button>
+
+                        <Typography
+                          variant="body2"
+                          style={{
+                            color: "#49BC88",
+                            marginBottom: 10,
+                            wordBreak: "break-word",
+                            opacity: 0.9,
+                          }}
+                        >
+                          {picture.name}
+                        </Typography>
+
+                        <TextField
+                          onChange={this.handleChange}
+                          multiline
+                          rows={3}
+                          value={this.state[picture.id] || ""}
+                          variant="outlined"
+                          type="text"
+                          label="Description"
+                          name={picture.id}
+                          sx={fieldSx}
+                        />
+
+                        <Button
+                          variant="contained"
+                          style={{
+                            ...dangerButtonStyle,
+                            width: "100%",
+                            marginTop: 8,
+                          }}
+                          onClick={() => this.deletePicture(picture.id)}
+                        >
+                          Del
+                        </Button>
+                      </Card>
+                    </Grid>
+                  ))}
+                </Grid>
+              </>
+            ) : null}
+          </div>
+
+          <div style={{ marginTop: 28 }}>
+            {this.state.loading ? (
+              <div style={{ maxWidth: 500, margin: "0 auto 18px auto" }}>
+                <LinearProgress
+                  variant="determinate"
+                  value={this.state.progress}
+                  sx={{
+                    height: 10,
+                    borderRadius: 999,
+                    backgroundColor: "rgba(73,188,136,0.14)",
+                    "& .MuiLinearProgress-bar": {
+                      backgroundColor: "#49BC88",
+                    },
+                  }}
+                />
+                <Typography
+                  align="center"
+                  variant="body1"
+                  style={{ color: "#49BC88", marginTop: 10 }}
+                >
+                  Uploading... {this.state.progress}%
+                </Typography>
+              </div>
+            ) : this.state.uploadComplete ? (
+              <Typography
+                align="center"
+                variant="h6"
+                style={{ color: "#49BC88", marginBottom: 18 }}
+              >
+                Uploaded
+              </Typography>
+            ) : null}
+
+            <div
+              style={{
+                display: "flex",
+                gap: 12,
+                justifyContent: "center",
+                flexWrap: "wrap",
+              }}
+            >
+              <Button
+                variant="contained"
+                style={{
+                  ...buttonStyle,
+                  width: 180,
+                }}
+                onClick={this.updateWork}
+                disabled={this.state.loading}
+              >
+                <Typography variant="subtitle2" style={{ color: "#49BC88" }}>
+                  {this.state.loading ? "Uploading..." : "Edit Item"}
+                </Typography>
+              </Button>
+
+              <Button
+                variant="contained"
+                style={{
+                  ...dangerButtonStyle,
+                  width: 180,
+                }}
+                onClick={() => this.setState({ deleteWarning: true })}
+              >
+                <Typography style={{ color: "#49BC88" }}>Delete Item</Typography>
+              </Button>
             </div>
-        )
-        }
-          
-    
+          </div>
+        </div>
 
+        {this.state.pictureWarning ? (
+          <Modal
+            open={true}
+            onClose={() => this.setState({ pictureWarning: false })}
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              padding: 20,
+            }}
+          >
+            <div
+              style={{
+                backgroundColor: "#011000",
+                border: "1px solid #49BC88",
+                borderRadius: 16,
+                padding: 24,
+                width: "100%",
+                maxWidth: 420,
+              }}
+            >
+              <Typography
+                variant="body1"
+                style={{ paddingBottom: 20, color: "#49BC88" }}
+              >
+                Delete this picture?
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={6}>
+                  <Button
+                    variant="contained"
+                    style={{ ...buttonStyle, width: "100%" }}
+                    onClick={() => this.setState({ pictureWarning: false })}
+                  >
+                    Back
+                  </Button>
+                </Grid>
+                <Grid item xs={6}>
+                  <Button
+                    variant="contained"
+                    style={{ ...buttonStyle, width: "100%" }}
+                    onClick={() => this.deletePictureFirebase(this.state.pictureWarning)}
+                  >
+                    Yes
+                  </Button>
+                </Grid>
+              </Grid>
+            </div>
+          </Modal>
+        ) : null}
+
+        {this.state.deleteWarning ? (
+          <Modal
+            open={true}
+            onClose={() => this.setState({ deleteWarning: false })}
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              padding: 20,
+            }}
+          >
+            <div
+              style={{
+                backgroundColor: "#011000",
+                border: "1px solid #49BC88",
+                borderRadius: 16,
+                padding: 24,
+                width: "100%",
+                maxWidth: 420,
+              }}
+            >
+              <Typography
+                variant="body1"
+                style={{ paddingBottom: 20, color: "#49BC88" }}
+              >
+                Delete this item?
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={6}>
+                  <Button
+                    variant="contained"
+                    style={{ ...buttonStyle, width: "100%" }}
+                    onClick={() => this.setState({ deleteWarning: false })}
+                  >
+                    Back
+                  </Button>
+                </Grid>
+                <Grid item xs={6}>
+                  <Button
+                    variant="contained"
+                    style={{ ...buttonStyle, width: "100%" }}
+                    onClick={this.deleteItem}
+                  >
+                    Yes
+                  </Button>
+                </Grid>
+              </Grid>
+            </div>
+          </Modal>
+        ) : null}
+
+        {this.state.viewPicture ? (
+          <Modal
+            open={true}
+            onClose={() => this.setState({ viewPicture: null })}
+            onClick={() => this.setState({ viewPicture: null })}
+            style={{
+              overflowY: "auto",
+              overflowX: "hidden",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              padding: 20,
+              backgroundColor: "rgba(0,0,0,0.85)",
+            }}
+          >
+            <img
+              src={this.state.viewPicture}
+              alt=""
+              style={{
+                width: "100%",
+                maxWidth: 1100,
+                height: "auto",
+                borderRadius: 16,
+                border: "1px solid #49BC88",
+                boxShadow: "0 0 24px rgba(73,188,136,0.18)",
+              }}
+            />
+          </Modal>
+        ) : null}
+      </div>
+    )
+  }
 }

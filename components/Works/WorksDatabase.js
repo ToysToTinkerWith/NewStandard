@@ -61,9 +61,10 @@ export default class PostsDatabase extends React.Component {
             },
             
           ]
+          console.log(this.props.user)
 
           if(this.props.user) {
-            if(this.props.user.email == "abergquist96@gmail.com") {
+            if(this.props.user.email == "abergquist96@gmail.com" || this.props.user.email == "newstandard710@gmail.com") {
                 Columns.push(
                 
                 {
